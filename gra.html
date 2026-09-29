@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Prosta Gra</title>
+	<style>
+		canvas {
+			border: 2px solid black;
+			display: block;
+			margin: 20px auto;
+		}
+
+		body {
+			text-align: center;
+			font-family: Arial, sans-serif;
+		}
+	</style>
+</head>
+<body>
+    <div>
+        <span>Wynik: <span id="score">0</span></span>
+        <span style="margin-left: 20px;">Czas: <span id="timer">30</span>s</span>
+    </div>
+    <h2>pacnij tego oto dżentelmena</h2>
+    <canvas id="gameCanvas" width="600" height="400" style="border:1px solid black;"></canvas>
+
+    <script>// Pobieranie elementów HTML
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer"); // Timer
+
+        // Ustawienia gry
+        let score = 0;
+        let timeLeft = 30; // 30 sekund na grę
+        let gameActive = true; // Flaga, czy gra jest aktywna
+        let square = { x: 50, y: 50, size: 100 }; // Pozycja obrazka
+        let speedX = getRandomSpeed();
+        let speedY = getRandomSpeed();
+
+        // Załadowanie obrazu
+        const img = new Image();
+        img.src = "zdjecie.png";
+
+        // Funkcja rysująca obrazek
+        function drawImage() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Czyścimy canvas
+            ctx.drawImage(img, square.x, square.y, square.size, square.size); // Rysujemy obrazek
+        }
+
+        // Funkcja aktualizująca pozycję obrazka
+        function updateSquarePosition() {
+            if (!gameActive) return; // Jeśli gra zakończona, nie aktualizujemy pozycji
+            square.x += speedX;
+            square.y += speedY;
+
+            // Odbicia od ścian i korekcja pozycji
+            if (square.x < 0 || square.x + square.size > canvas.width) {
+                square.x = Math.max(0, Math.min(square.x, canvas.width - square.size));
+                speedX *= -1;
+            }
+            if (square.y < 0 || square.y + square.size > canvas.height) {
+                square.y = Math.max(0, Math.min(square.y, canvas.height - square.size));
+                speedY *= -1;
+            }
+        }
+
+        // Funkcja zmieniająca losowo kierunki i prędkości
+        function makeMovementCrazy() {
+            if (!gameActive) return; // Jeśli gra zakończona, nie zmieniamy kierunku
+            speedX = getRandomSpeed();
+            speedY = getRandomSpeed();
+        }
+
+        // Funkcja sprawdzająca, czy kliknięto na obrazek
+        function isSquareClicked(mouseX, mouseY) {
+            return (
+                mouseX >= square.x &&
+                mouseX <= square.x + square.size &&
+                mouseY >= square.y &&
+                mouseY <= square.y + square.size
+            );
+        }
+
+        // Obsługa kliknięcia na canvas
+        canvas.addEventListener("click", function (event) {
+            if (!gameActive) return; // Kliknięcia nie są liczone po zakończeniu gry
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            if (isSquareClicked(mouseX, mouseY)) {
+                score++;
+                scoreDisplay.textContent = score;
+                makeMovementCrazy(); // Po kliknięciu obrazek zmienia ruch
+            }
+        });
+
+        // Funkcja generująca losową prędkość
+        function getRandomSpeed() {
+            let speed = Math.random() * 4 + 1; // Prędkość od 1 do 5
+            return Math.random() < 0.5 ? -speed : speed; // Losowy kierunek
+        }
+
+        // Funkcja zarządzająca czasem gry
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    timerDisplay.textContent = timeLeft; // Aktualizuj wyświetlacz timera
+                } else {
+                    clearInterval(timerInterval); // Zatrzymaj licznik
+                    gameActive = false; // Zakończ grę
+                    endGame(); // Wywołaj funkcję zakończenia gry
+                }
+            }, 1000);
+        }
+
+        // Funkcja kończąca grę
+        function endGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Wyczyść planszę
+            ctx.fillStyle = "black";
+            ctx.font = "30px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Koniec gry! Wynik: " + score, canvas.width / 2, canvas.height / 2);
+        }
+
+        // Główna pętla gry
+        function gameLoop() {
+            if (gameActive) {
+                updateSquarePosition();
+                drawImage();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Uruchom losowe zmiany kierunku co 500 ms
+        setInterval(makeMovementCrazy, 500); // Obrazek zmienia kierunek co pół sekundy
+
+        // Start gry
+        startTimer();
+        gameLoop();</script>
+</body>
+</html>
+
+
